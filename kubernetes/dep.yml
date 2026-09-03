@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8s-cicd-deployment
+  labels:
+    app: k8s-cicd
+  namespace: k8s-cicd-ns
+spec:
+  selector:
+    matchLabels:
+      app: k8s-cicd
+  template:
+    metadata:
+      labels:
+        app: k8s-cicd
+    spec:
+      containers:
+      - name: k8s-cicd-image
+        image: rayyan12311/node-k8s-cicd:latest
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 6767
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 6767
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 2
+          failureThreshold: 3
+
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: 6767
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 2
+          failureThreshold: 2

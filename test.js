@@ -1,14 +1,14 @@
 const http = require('node:http');
 const server = require('./index.js');
 
-const TEST_PORT = 6767;
+let activePort;
 
 function makeRequest(path) {
   return new Promise((resolve, reject) => {
     const req = http.get(
       {
         hostname: '127.0.0.1',
-        port: TEST_PORT,
+        port: activePort,
         path: path,
         timeout: 2000,
       },
@@ -38,10 +38,12 @@ function makeRequest(path) {
 async function runTests() {
   console.log('Starting test suite for k8s-cicd-app...\n');
 
-  // Start server on test port if not already listening
+  // Start server on an ephemeral free port (port 0) to avoid conflicts
   if (!server.listening) {
-    await new Promise((resolve) => server.listen(TEST_PORT, resolve));
+    await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   }
+  activePort = server.address().port;
+  console.log(`Test server running on port ${activePort}\n`);
 
   let passed = 0;
   let total = 0;
@@ -68,7 +70,18 @@ async function runTests() {
     }
   });
 
-  // Test 2: API endpoint
+  // Test 2: Readiness probe
+  await test('GET /ready returns 200 and status READY', async () => {
+    const res = await makeRequest('/ready');
+    if (res.statusCode !== 200) {
+      throw new Error(`Expected status 200, got ${res.statusCode}`);
+    }
+    if (res.body?.status !== 'READY' || res.body?.ready !== true) {
+      throw new Error(`Expected status 'READY', got ${JSON.stringify(res.body)}`);
+    }
+  });
+
+  // Test 3: API endpoint
   await test('GET /api returns 200 and success response', async () => {
     const res = await makeRequest('/api');
     if (res.statusCode !== 200) {
@@ -82,18 +95,18 @@ async function runTests() {
     }
   });
 
-  // Test 3: Root endpoint
+  // Test 4: Root endpoint
   await test('GET / returns 200 with service info', async () => {
     const res = await makeRequest('/');
     if (res.statusCode !== 200) {
       throw new Error(`Expected status 200, got ${res.statusCode}`);
     }
-    if (!res.body?.endpoints?.health || !res.body?.endpoints?.api) {
+    if (!res.body?.endpoints?.health || !res.body?.endpoints?.ready || !res.body?.endpoints?.api) {
       throw new Error('Expected endpoints description in root');
     }
   });
 
-  // Test 4: 404 handler
+  // Test 5: 404 handler
   await test('GET /unknown returns 404', async () => {
     const res = await makeRequest('/unknown');
     if (res.statusCode !== 404) {
