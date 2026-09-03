@@ -37,6 +37,6 @@ pipeline {
                     JENKINS_NODE_COOKIE=dontKillMe nohup kubectl port-forward svc/k8s-cicd-svc 6767:6767 -n k8s-cicd-ns --address 0.0.0.0 &
                 """
             }
-        }
+        } 
     }
 }
