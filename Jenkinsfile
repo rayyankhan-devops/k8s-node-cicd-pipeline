@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    triggers {
+        githubPush()
+    }
+
     environment {
         DOCKER_HUB = 'rayyan12311/node-k8s-cicd'
     }

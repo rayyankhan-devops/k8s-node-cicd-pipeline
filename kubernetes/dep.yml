@@ -17,7 +17,7 @@ spec:
       containers:
       - name: k8s-cicd-image
         image: rayyan12311/node-k8s-cicd:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         resources:
           requests:
             memory: "64Mi"

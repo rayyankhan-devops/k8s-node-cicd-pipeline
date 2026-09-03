@@ -19,6 +19,7 @@ const server = http.createServer((req, res) => {
     return res.end(
       JSON.stringify({
         status: 'UP',
+        version: 'v2',
         uptime: process.uptime(),
         timestamp: new Date().toISOString(),
       })
@@ -32,6 +33,7 @@ const server = http.createServer((req, res) => {
       return res.end(
         JSON.stringify({
           status: 'READY',
+          version: 'v2',
           ready: true,
           timestamp: new Date().toISOString(),
         })
@@ -41,6 +43,7 @@ const server = http.createServer((req, res) => {
       return res.end(
         JSON.stringify({
           status: 'NOT_READY',
+          version: 'v2',
           ready: false,
           message: 'Service is not ready to receive traffic',
         })
@@ -53,10 +56,12 @@ const server = http.createServer((req, res) => {
     res.writeHead(200);
     return res.end(
       JSON.stringify({
-        message: 'Hello from the API endpoint Rayyan!',
+        message: 'Hello from the API endpoint v2 (Rayyan)!',
+        version: '2.0.0',
         status: 'success',
         data: {
           app: 'k8s-cicd-app',
+          version: '2.0.0',
           port: PORT,
           environment: process.env.NODE_ENV || 'development',
         },
@@ -70,7 +75,8 @@ const server = http.createServer((req, res) => {
     return res.end(
       JSON.stringify({
         name: 'k8s-cicd-app',
-        message: 'Application is running.',
+        version: '2.0.0',
+        message: 'Application v2 is running successfully.',
         endpoints: {
           health: '/health',
           ready: '/ready',
