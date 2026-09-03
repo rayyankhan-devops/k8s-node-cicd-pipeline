@@ -1,19 +1,41 @@
-pipeline{
+pipeline {
     agent any
-    stages{
-        stage('Build') {
+
+    environment {
+        DOCKER_HUB = 'rayyan12311/node-k8s-cicd'
+    }
+
+    stages {
+        stage('Build Docker Image') {
             steps {
-                echo 'Building...'
+                sh "docker build -t ${DOCKER_HUB}:latest ."
             }
         }
-        stage('Test') {
+
+        stage('Push to Docker Hub') {
             steps {
-                echo 'Testing...'
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                    sh "echo \$PASS | docker login -u \$USER --password-stdin"
+                    sh "docker push ${DOCKER_HUB}:latest"
+                }
             }
         }
-        stage('Deploy') {
+
+        stage('Deploy to Kubernetes') {
             steps {
-                echo 'Deploying...'
+                // Apply namespace first, then all other yaml files
+                sh "kubectl apply -f kubernetes/namespace.yml"
+                sh "kubectl apply -f kubernetes/"
+                sh "kubectl rollout restart deployment/k8s-cicd-deployment -n k8s-cicd-ns"
+            }
+        }
+
+        stage('Port Forward') {
+            steps {
+                sh """
+                    pkill -f "kubectl port-forward.*6767" || true
+                    JENKINS_NODE_COOKIE=dontKillMe nohup kubectl port-forward svc/k8s-cicd-svc 6767:6767 -n k8s-cicd-ns --address 0.0.0.0 &
+                """
             }
         }
     }
