@@ -53,7 +53,7 @@ const server = http.createServer((req, res) => {
     res.writeHead(200);
     return res.end(
       JSON.stringify({
-        message: 'Hello from the API endpoint!',
+        message: 'Hello from the API endpoint Rayyan!',
         status: 'success',
         data: {
           app: 'k8s-cicd-app',
